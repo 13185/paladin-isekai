@@ -192,6 +192,9 @@ html,body{height:100%;background:#000;font-family:-apple-system,"PingFang SC","N
 .sk-chop .g,.sk-charge .g,.sk-shout .g{background:radial-gradient(circle,#efe,#5a9a3a);color:#fff}.sk-regen .g{background:radial-gradient(circle,#fee,#c33);color:#fff}.sk-whirl .g{background:radial-gradient(circle,#fff,#3a8a2a);color:#fff}
 #bover{z-index:30}
 #battle{background-size:cover!important;background-position:center!important}
+
+.btn.locked,.btn:disabled{opacity:.45;filter:grayscale(.4);pointer-events:auto;cursor:not-allowed}
+.btn.locked small,.btn:disabled small{color:#ffb4c8}
 </style></head><body>
 <div id="game">
  <div id="bg"></div><div id="stage"></div><div id="fade"></div>
@@ -1353,17 +1356,14 @@ function readSave(){try{return JSON.parse(localStorage.getItem(SAVE)||'null');}c
 function writeSave(extra){try{const s=Object.assign(readSave()||{},{P:JSON.parse(JSON.stringify(P())),aff:G.aff,books:G.books||[],choices:G.choices||{}},extra);localStorage.setItem(SAVE,JSON.stringify(s));}catch(e){}}
 G.readSave=readSave;G.writeSave=writeSave;
 function hideAll(){$('#fade').classList.remove('on');$('#endscr').classList.remove('show');$('#overlay').classList.remove('show');$('#battle').classList.remove('show');$('#mapscr').classList.remove('show');$('#titlescr').classList.remove('show');}
-function start(ch,opt){opt=opt||{};hideAll();G.ch=ch;G.aff={};G.log=[];G.done=false;G.book=0;G.judge=null;G.choice=null;G.choices={};G.battles=[];G.books=[];G.nodes={};G.busy=false;
+function start(ch,opt){opt=opt||{};const sv0=readSave();if(ch===2&&!(sv0&&sv0.ch1done)){showTitle('请先通关第一章，才能解锁第二章。');return;}if(ch===3&&!(sv0&&sv0.ch2done)){showTitle('请先通关第一、二章，才能解锁第三章。');return;}hideAll();G.ch=ch;G.aff={};G.log=[];G.done=false;G.book=0;G.judge=null;G.choice=null;G.choices={};G.battles=[];G.books=[];G.nodes={};G.busy=false;
  $('#chname').textContent=ch===1?'第一章《猝死开局，满床风流债》':ch===2?'第二章《龙巢里的宝藏》':'第三章《龙王的考验》';
  if(ch===1){freshP();G.queue=SCRIPT.slice();}
- else if(ch===2){const s=opt.fresh?null:readSave();
-  if(s&&s.ch1done){Object.assign(P(),JSON.parse(JSON.stringify(s.P)));G.aff=Object.assign({},s.aff);G.books=(s.books||[]).slice();G.carried=true;}
-  else{freshP();Object.assign(P(),{lv:5,xp:435,tp:1,tal:{sweet:1,face:2,run:1,filter:0,gaze:0},bless:'power',seen:{base:1,hammer:1,judge:1,ult:1},bossXP:1});G.aff={'葛罗莎':12,'艾莉安':-55};G.books=['Ⅰ'];G.carried=false;}
+ else if(ch===2){const s=readSave();
+  Object.assign(P(),JSON.parse(JSON.stringify(s.P)));G.aff=Object.assign({},s.aff);G.books=(s.books||[]).slice();G.carried=true;
   P().bossXP=0;G.queue=CH2_OPEN.slice();}
- else{const s=opt.fresh?null:readSave();
-  if(s&&s.ch2done){Object.assign(P(),JSON.parse(JSON.stringify(s.P)));G.aff=Object.assign({},s.aff);G.books=(s.books||[]).slice();G.carried=true;}
-  else{freshP();Object.assign(P(),{lv:10,xp:2786,tp:2,tal:{sweet:2,face:2,run:1,filter:1,gaze:1},bless:'power',seen:{base:1,hammer:1,judge:1,ult:1,consec:1,bubble:1,loh:1,wings:1},bossXP:1,gaze:1});
-   G.aff={'葛罗莎':30,'艾莉安':20,'瑟拉菲娜':55};G.books=['Ⅰ','Ⅳ'];G.carried=false;}
+ else{const s=readSave();
+  Object.assign(P(),JSON.parse(JSON.stringify(s.P)));G.aff=Object.assign({},s.aff);G.books=(s.books||[]).slice();G.carried=true;
   P().bossXP=0;G.queue=CH3_OPEN.slice();}
  G.updTal();updAff();next();}
 function updAff(){const e=Object.entries(G.aff);$('#aff').textContent=e.length?e.map(([k,v])=>'❤ '+k+' '+v).join('  '):'❤ 好感';}
@@ -1477,12 +1477,26 @@ $('#toch2').onclick=e=>{e.stopPropagation();start(2);};
 const t3btn=$('#toch3');if(t3btn)t3btn.onclick=e=>{e.stopPropagation();start(3);};
 G.reset=()=>start(G.ch||1);G.start=start;G.sfx=sfx;G.particles=particles;G.popup=popup;
 $('#talbtn').onclick=e=>{e.stopPropagation();if(G.busy&&!$('#mapscr').classList.contains('show'))return;const wasBusy=G.busy;G.busy=true;G.talentScreen('随时加点').then(()=>{G.busy=wasBusy;});};
-function showTitle(){hideAll();G.done=true;const s=readSave();const t=$('#titlescr');
- t.innerHTML='<h1>圣光渣骑</h1><h2>我在异界当海王</h2><button class="btn" id="go1">第一章 · 猝死开局</button><button class="btn" id="go2">第二章 · 龙巢里的宝藏'+(s&&s.ch1done?'<small>继承存档 Lv'+(s.P&&s.P.lv)+'</small>':'<small>无存档：Lv5 新开局</small>')+'</button>'+(s&&s.ch1done?'<button class="btn ghostbtn" id="go2f">第二章 · 不继承</button>':'')+'<button class="btn" id="go3">第三章 · 龙王的考验'+(s&&s.ch2done?'<small>继承存档 Lv'+(s.P&&s.P.lv)+'</small>':'<small>无存档：Lv10 新开局</small>')+'</button>'+(s&&s.ch2done?'<button class="btn ghostbtn" id="go3f">第三章 · 不继承，Lv10</button>':'')+'<p>原型 v0.6 · 18+ 擦边喜剧 · Ch1–Ch3</p>';
- t.classList.add('show');$('#go1').onclick=e=>{e.stopPropagation();start(1);};$('#go2').onclick=e=>{e.stopPropagation();start(2);};const f=$('#go2f');if(f)f.onclick=e=>{e.stopPropagation();start(2,{fresh:1});};
- $('#go3').onclick=e=>{e.stopPropagation();start(3);};const f3=$('#go3f');if(f3)f3.onclick=e=>{e.stopPropagation();start(3,{fresh:1});};}
+function showTitle(msg){hideAll();G.done=true;const s=readSave();const t=$('#titlescr');
+ const unlocked2=!!(s&&s.ch1done), unlocked3=!!(s&&s.ch2done);
+ const tip2=unlocked2?'<small>继承存档 Lv'+(s.P&&s.P.lv)+'</small>':'<small>🔒 先通关第一章</small>';
+ const tip3=unlocked3?'<small>继承存档 Lv'+(s.P&&s.P.lv)+'</small>':'<small>🔒 先通关第一、二章</small>';
+ t.innerHTML='<h1>圣光渣骑</h1><h2>我在异界当海王</h2>'+(msg?'<p style="color:#ffb4c8;margin:8px 18px 0;font-size:14px">'+msg+'</p>':'')+
+  '<button class="btn" id="go1">第一章 · 猝死开局</button>'+
+  '<button class="btn'+(unlocked2?'':' locked')+'" id="go2"'+(unlocked2?'':' disabled')+'>第二章 · 龙巢里的宝藏'+tip2+'</button>'+
+  '<button class="btn'+(unlocked3?'':' locked')+'" id="go3"'+(unlocked3?'':' disabled')+'>第三章 · 龙王的考验'+tip3+'</button>'+
+  '<p>原型 v0.6 · 18+ 擦边喜剧 · 通关前一章才解锁后章</p>';
+ t.classList.add('show');
+ $('#go1').onclick=e=>{e.stopPropagation();start(1);};
+ $('#go2').onclick=e=>{e.stopPropagation();if(!unlocked2){showTitle('请先通关第一章，才能解锁第二章。');return;}start(2);};
+ $('#go3').onclick=e=>{e.stopPropagation();if(!unlocked3){showTitle('请先通关第一、二章，才能解锁第三章。');return;}start(3);};
+}
 G.showTitle=showTitle;
 const bgi=(sel,k,g)=>{const e=$(sel);if(e)e.style.backgroundImage=(g||'')+'url('+IMG[k]+')';};bgi('#titlescr','cg-seraphina-morning','linear-gradient(rgba(0,0,0,.15),rgba(20,0,10,.9)),');bgi('#endscr','bg-night','linear-gradient(rgba(0,0,0,.55),rgba(0,0,0,.8)),');bgi('#mapscr','map-ch2');
-const q=new URLSearchParams(location.search);if(q.get('ch')==='1')start(1);else if(q.get('ch')==='2')start(2,{fresh:q.get('fresh')==='1'});else if(q.get('ch')==='3')start(3,{fresh:q.get('fresh')==='1'});else showTitle();
+const q=new URLSearchParams(location.search);const sv=readSave();
+if(q.get('ch')==='1')start(1);
+else if(q.get('ch')==='2'){if(sv&&sv.ch1done)start(2);else showTitle('链接无效：请先通关第一章再玩第二章。');}
+else if(q.get('ch')==='3'){if(sv&&sv.ch2done)start(3);else showTitle('链接无效：请先通关第一、二章再玩第三章。');}
+else showTitle();
 })();
 </script></body></html>
