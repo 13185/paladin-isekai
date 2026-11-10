@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#140808" />
+  <meta name="author" content="Jack" />
+  <link rel="icon" href="data:,">
+  <title>圣光渣骑：我在异界当海王 · 3D 演示</title>
+  <link rel="stylesheet" href="./css/style.css" />
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "./vendor/three/build/three.module.js",
+      "three/addons/": "./vendor/three/examples/jsm/"
+    }
+  }
+  </script>
+</head>
+<body>
+  <canvas id="game-canvas"></canvas>
+
+  <div id="loading" class="overlay">
+    <div class="load-card">
+      <div class="crest" aria-hidden="true"></div>
+      <p class="eyebrow">白冠王国 · 晨誓圣堂</p>
+      <h1>圣光渣骑</h1>
+      <p class="sub">我在异界当海王</p>
+      <div class="bar"><i id="load-bar"></i></div>
+      <p id="load-text">正在唤醒圣光…</p>
+      <p class="credit">作者：Jack · © Jack 版权所有 · 禁止任何形式转载</p>
+    </div>
+  </div>
+
+  <div id="title" class="overlay hidden">
+    <div class="title-vignette"></div>
+    <div class="title-card">
+      <p class="eyebrow">3D 垂直切片演示 · 艾瑟兰大陆</p>
+      <h1>圣光渣骑</h1>
+      <h2>我在异界当海王</h2>
+      <p class="tagline">龙女 · 兽人 · 精灵 · 魅魔 · 海妖<br/>全员为你脸红心跳</p>
+      <button id="btn-start" class="btn-gold" type="button">进入艾瑟兰</button>
+      <div class="title-row">
+        <label>画质
+          <select id="quality-select">
+            <option value="high">高</option>
+            <option value="medium" selected>中</option>
+            <option value="low">低</option>
+          </select>
+        </label>
+        <button id="btn-mute-title" class="btn-ghost" type="button">声音：开</button>
+      </div>
+      <p class="credit">作者：Jack<br/>© Jack 版权所有 · 禁止任何形式转载</p>
+      <p class="hint">键盘：WASD 移动 · 鼠标看向 · Shift 冲刺 · 空格跳跃 · C 翻滚<br/>E 互动 · 左键普攻 · 1 治疗 · 2 圣锤 · 3 审判 · Tab 锁定 · Esc 暂停</p>
+    </div>
+  </div>
+
+  <div id="hud" class="hidden">
+    <div id="bars">
+      <div class="who">
+        <img id="hud-face" alt="罗兰" src="./assets/portraits/roland.webp" />
+        <div>
+          <b>罗兰·光誓</b>
+          <span id="hud-level">Lv.3 圣骑士</span>
+        </div>
+      </div>
+      <div class="track hp"><i id="hp-fill"></i><em id="hp-text">100/100</em></div>
+      <div class="track mp"><i id="mp-fill"></i><em id="mp-text">80/80</em></div>
+    </div>
+    <div id="quest-tracker">
+      <h3>委托</h3>
+      <p id="quest-title">晨誓广场</p>
+      <ul id="quest-steps"></ul>
+    </div>
+    <div id="minimap-wrap">
+      <canvas id="minimap" width="180" height="180"></canvas>
+      <span class="compass">N</span>
+    </div>
+    <div id="skill-bar">
+      <button class="sk" data-skill="slash" type="button"><b>攻</b><small>十字圣击</small><s></s></button>
+      <button class="sk" data-skill="heal" type="button"><b>1</b><small>圣光速疗</small><s></s></button>
+      <button class="sk" data-skill="hammer" type="button"><b>2</b><small>圣裁之锤</small><s></s></button>
+      <button class="sk" data-skill="judge" type="button"><b>3</b><small>审判之光</small><s></s></button>
+    </div>
+    <div id="interact-prompt" class="hidden">按 <kbd>E</kbd> <span id="interact-name">交谈</span></div>
+    <div id="hint-toast"></div>
+  </div>
+
+  <div id="dialogue" class="hidden">
+    <div class="dlg-shade"></div>
+    <img id="dlg-left" class="dlg-port left" alt="" />
+    <img id="dlg-right" class="dlg-port right" alt="" />
+    <div class="dlg-box">
+      <div class="dlg-name" id="dlg-name"></div>
+      <p id="dlg-text"></p>
+      <div id="dlg-choices"></div>
+      <p class="dlg-next" id="dlg-next">点击或按 E 继续</p>
+    </div>
+  </div>
+
+  <div id="cg" class="hidden">
+    <div class="cg-frame">
+      <img id="cg-img" alt="剧情插图" />
+      <p id="cg-cap"></p>
+      <p class="credit">作者：Jack · 禁止转载</p>
+      <button id="cg-close" class="btn-gold" type="button">……灯又亮了</button>
+    </div>
+  </div>
+
+  <div id="levelup" class="hidden">
+    <div class="lu-card">
+      <p>圣光涌动</p>
+      <h2 id="lu-text">升级！Lv.4</h2>
+      <p id="lu-sub">您的腰力评级提升至：广场级合格。</p>
+    </div>
+  </div>
+
+  <div id="death" class="overlay hidden">
+    <div class="title-card slim">
+      <h2>圣光……好像欠费了</h2>
+      <p>罗兰脸朝下栽进晨誓广场的石砖里。好在圣泉还愿意赊一笔账。</p>
+      <button id="btn-revive" class="btn-gold" type="button">在圣泉复苏</button>
+    </div>
+  </div>
+
+  <div id="ending" class="overlay hidden">
+    <div class="title-card">
+      <p class="eyebrow">委托完成</p>
+      <h2>晨辉林重归宁静</h2>
+      <p id="ending-text" class="tagline"></p>
+      <p class="credit">作者：Jack　© Jack 版权所有 · 禁止任何形式转载</p>
+      <div class="title-row">
+        <button id="btn-continue" class="btn-gold" type="button">继续闲逛</button>
+        <button id="btn-end-title" class="btn-ghost" type="button">返回标题</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="pause" class="overlay hidden">
+    <div class="title-card slim">
+      <h2>暂停</h2>
+      <div class="pause-stack">
+        <button id="btn-resume" class="btn-gold" type="button">继续冒险</button>
+        <button id="btn-mute" class="btn-ghost" type="button">声音：开</button>
+        <label class="pause-q">画质
+          <select id="quality-ingame">
+            <option value="high">高</option>
+            <option value="medium">中</option>
+            <option value="low">低</option>
+          </select>
+        </label>
+        <button id="btn-to-title" class="btn-ghost" type="button">回到标题</button>
+      </div>
+      <p class="credit">作者：Jack · 禁止转载</p>
+    </div>
+  </div>
+
+  <div id="mobile" class="hidden">
+    <div id="joy"><i id="joy-knob"></i></div>
+    <div id="look-pad"></div>
+    <div id="mob-btns">
+      <button id="m-interact" type="button">互动</button>
+      <button id="m-jump" type="button">跳</button>
+      <button id="m-roll" type="button">滚</button>
+      <button id="m-atk" type="button">攻</button>
+    </div>
+  </div>
+
+  <div id="nums"></div>
+  <div id="watermark">© Jack 版权所有 · 禁止任何形式转载　作者：Jack</div>
+  <a id="back-2d" href="../" title="返回 2D 版">2D 版</a>
+
+  <script type="module" src="./js/main.js"></script>
+</body>
+</html>
